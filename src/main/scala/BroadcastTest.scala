@@ -23,18 +23,18 @@ object BroadcastTest extends App {
   val source: Source[Int, NotUsed] =
     Source.fromIterator(() => Iterator.continually(ThreadLocalRandom.current().nextInt(100))).take(100)
 
-  val countSink: Sink[Int, Future[Int]] = Flow[Int].toMat(Sink.fold(0)({ (acc, _) =>
+  val countSink: Sink[Int, Future[Int]] = Flow[Int].fold(0)({ (acc, _) =>
     spin(10)
     acc + 1
-  }))(Keep.right)
-  val minSink: Sink[Int, Future[Int]] = Flow[Int].toMat(Sink.fold(0)({ (acc, elem) =>
+  }).async.toMat(Sink.head)(Keep.right)
+  val minSink: Sink[Int, Future[Int]] = Flow[Int].fold(0)({ (acc, elem) =>
     spin(10)
     math.min(acc, elem)
-  }))(Keep.right)
-  val maxSink: Sink[Int, Future[Int]] = Flow[Int].toMat(Sink.fold(0)({ (acc, elem) =>
+  }).async.toMat(Sink.head)(Keep.right)
+  val maxSink: Sink[Int, Future[Int]] = Flow[Int].fold(0)({ (acc, elem) =>
     spin(10)
     math.max(acc, elem)
-  }))(Keep.right)
+  }).async.toMat(Sink.head)(Keep.right)
 
   val (count: Future[Int], min: Future[Int], max: Future[Int]) =
     RunnableGraph
@@ -43,9 +43,9 @@ object BroadcastTest extends App {
           import GraphDSL.Implicits._
           val broadcast = builder.add(Broadcast[Int](3))
           source ~> broadcast
-          broadcast ~> Flow[Int].async ~> countS
-          broadcast ~> Flow[Int].async ~> minS
-          broadcast ~> Flow[Int].async ~> maxS
+          broadcast ~> countS
+          broadcast ~> minS
+          broadcast ~> maxS
           ClosedShape
       })
       .run()

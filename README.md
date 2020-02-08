@@ -27,3 +27,19 @@ at the threading with more detail.
 It does jump a bit, but the executions do not overlap.
 
 ![VisualVM screenshot](VisualVM_screenshot.png)
+
+## Actually parallelizing
+
+Adding `.async` **before** the CPU heavy `Flow` does not work,
+but adding it  **to** the flow does the trick.
+Note that `Sink.fold` is the combination of `Flow.fold` and `Sink.head`.
+The change here is to call `Flow.fold`, then call `.async`,
+and connect it to a `Sink.head`.
+
+The graph then takes about 1 second when each element takes 10ms.
+
+Below is a VisualVM screenshot
+showing the processing of 100 elements,
+and every element takes 1 second.
+
+![VisualVM screenshot with parallel sinks](parallel.png)
