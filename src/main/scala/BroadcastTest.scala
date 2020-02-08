@@ -23,9 +23,18 @@ object BroadcastTest extends App {
   val source: Source[Int, NotUsed] =
     Source.fromIterator(() => Iterator.continually(ThreadLocalRandom.current().nextInt(100))).take(100)
 
-  val countSink: Sink[Int, Future[Int]] = Flow[Int].toMat(Sink.fold(0)((acc, elem) => acc + 1))(Keep.right)
-  val minSink: Sink[Int, Future[Int]] = Flow[Int].toMat(Sink.fold(0)((acc, elem) => math.min(acc, elem)))(Keep.right)
-  val maxSink: Sink[Int, Future[Int]] = Flow[Int].toMat(Sink.fold(0)((acc, elem) => math.max(acc, elem)))(Keep.right)
+  val countSink: Sink[Int, Future[Int]] = Flow[Int].toMat(Sink.fold(0)({ (acc, _) =>
+    spin(10)
+    acc + 1
+  }))(Keep.right)
+  val minSink: Sink[Int, Future[Int]] = Flow[Int].toMat(Sink.fold(0)({ (acc, elem) =>
+    spin(10)
+    math.min(acc, elem)
+  }))(Keep.right)
+  val maxSink: Sink[Int, Future[Int]] = Flow[Int].toMat(Sink.fold(0)({ (acc, elem) =>
+    spin(10)
+    math.max(acc, elem)
+  }))(Keep.right)
 
   val (count: Future[Int], min: Future[Int], max: Future[Int]) =
     RunnableGraph
