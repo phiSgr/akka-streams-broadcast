@@ -34,9 +34,9 @@ object BroadcastTest extends App {
           import GraphDSL.Implicits._
           val broadcast = builder.add(Broadcast[Int](3))
           source ~> broadcast
-          broadcast.out(0) ~> countS
-          broadcast.out(0) ~> minS
-          broadcast.out(0) ~> maxS
+          broadcast.out(0) ~> Flow[Int].async ~> countS
+          broadcast.out(0) ~> Flow[Int].async ~> minS
+          broadcast.out(0) ~> Flow[Int].async ~> maxS
           ClosedShape
       })
       .run()
